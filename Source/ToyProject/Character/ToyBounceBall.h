@@ -5,10 +5,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 
+#include "AbilitySystemInterface.h"
+
 #include "ToyBounceBall.generated.h"
 
 UCLASS()
-class TOYPROJECT_API AToyBounceBall : public ACharacter
+class TOYPROJECT_API AToyBounceBall : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -27,6 +29,23 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual void PossessedBy(AController* NewController) override;
+
+// Ability System
+public:
+	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	UPROPERTY(EditAnywhere, Category = GAS)
+	TObjectPtr <class UAbilitySystemComponent> ASC;
+
+	UPROPERTY(EditAnywhere, Category = GAS)
+	TSubclassOf <class UGameplayAbility> GameplayAbilityActionA;
+
+	UPROPERTY(EditAnywhere, Category = GAS)
+	TSubclassOf <class UGameplayAbility> GameplayAbilityActionB;
+
+	UPROPERTY(EditAnywhere, Category = GAS)
+	TSubclassOf <class UGameplayAbility> GameplayAbilityActionLT;
 
 // Ball Setting
 public:
@@ -37,7 +56,24 @@ public:
 	float BallRadius = 50;  
 
 	UPROPERTY(EditDefaultsOnly, Category = BounceBall)
-	float BouncePower = 2000.0f;
+	float BounceGroundPower = 3000.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = BounceBall)
+	float BounceWallPower = 1500.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = BounceBall)
+	float BounceWallPowerZ = 2000.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = BounceBall)
+	bool bIsMoveRandom = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = BounceBall)
+	float RandomPower = 2000.0f;
+
+
+
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr <class UCharacterMovementComponent> BouneBallMovementComponent;
 
 
 	UPROPERTY(EditDefaultsOnly, Category = Camera)
@@ -61,6 +97,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr <class UInputAction> InputActionLT;
 
+
 	void Move(const struct FInputActionValue& Value);
 
 	void BounceWhenHittingGround();
@@ -72,4 +109,10 @@ public:
 	void ActActionB();
 	void ActActionLT();
 
+	UFUNCTION ()
+	void BallCollisionHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	// Ability로 뺄 예정
+	void MoveRandom();
+	
 };
