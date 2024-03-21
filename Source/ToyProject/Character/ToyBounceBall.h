@@ -39,13 +39,16 @@ public:
 	TObjectPtr <class UAbilitySystemComponent> ASC;
 
 	UPROPERTY(EditAnywhere, Category = GAS)
-	TSubclassOf <class UGameplayAbility> GameplayAbilityActionA;
+	TArray <TSubclassOf <class UGameplayAbility>> GameplayStartAbilities;
 
 	UPROPERTY(EditAnywhere, Category = GAS)
-	TSubclassOf <class UGameplayAbility> GameplayAbilityActionB;
+	TMap <int32, TSubclassOf <class UGameplayAbility>> GameplayActionAbilities;
 
-	UPROPERTY(EditAnywhere, Category = GAS)
-	TSubclassOf <class UGameplayAbility> GameplayAbilityActionLT;
+	//UPROPERTY(EditAnywhere, Category = GAS)
+	//TSubclassOf <class UGameplayAbility> GameplayAbilityActionB;
+
+	//UPROPERTY(EditAnywhere, Category = GAS)
+	//TSubclassOf <class UGameplayAbility> GameplayAbilityActionLT;
 
 // Ball Setting
 public:
@@ -89,25 +92,31 @@ public:
 	TObjectPtr <class UInputAction> InputActionMove;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr <class UInputAction> InputActionA;
+	TMap<int32, TObjectPtr <class UInputAction>> InputActions;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr <class UInputAction> InputActionB;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	//TObjectPtr <class UInputAction> InputActionB;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr <class UInputAction> InputActionLT;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	//TObjectPtr <class UInputAction> InputActionLT;
 
 
 	void Move(const struct FInputActionValue& Value);
 
-	void BounceWhenHittingGround();
+	float MoveInputXDirection = 0;
+
+	FORCEINLINE float GetMoveInputXDirection() const { return MoveInputXDirection; }
+
+	//void BounceWhenHittingGround();
 
 	void FixXVelocityZero();
 	void FixXLocationZero();
 	
-	void ActActionA();
-	void ActActionB();
-	void ActActionLT();
+	//void ActActionA();
+	//void ActActionB();
+	//void ActActionLT();
+
+	void ActActionByInputID(int32 InputID);
 
 	UFUNCTION ()
 	void BallCollisionHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);

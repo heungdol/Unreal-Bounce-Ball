@@ -122,7 +122,7 @@ void AToyBounceBall::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// 바닥에 닿을 시 바운스
-	BounceWhenHittingGround();
+	//BounceWhenHittingGround();
 
 	// X 위치 제한
 	FixXVelocityZero();
@@ -143,9 +143,14 @@ void AToyBounceBall::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	{
 		EnhancedInputComponent->BindAction(InputActionMove, ETriggerEvent::Triggered, this, &AToyBounceBall::Move);
 
-		EnhancedInputComponent->BindAction(InputActionA, ETriggerEvent::Triggered, this, &AToyBounceBall::ActActionA);
-		EnhancedInputComponent->BindAction(InputActionB, ETriggerEvent::Triggered, this, &AToyBounceBall::ActActionB);
-		EnhancedInputComponent->BindAction(InputActionLT, ETriggerEvent::Triggered, this, &AToyBounceBall::ActActionLT);
+		for (const auto& InputAction : InputActions)
+		{
+			EnhancedInputComponent->BindAction(InputAction.Value, ETriggerEvent::Triggered, this, &AToyBounceBall::ActActionByInputID, InputAction.Key);
+		}
+
+		//EnhancedInputComponent->BindAction(InputActionA, ETriggerEvent::Triggered, this, &AToyBounceBall::ActActionA);
+		//EnhancedInputComponent->BindAction(InputActionB, ETriggerEvent::Triggered, this, &AToyBounceBall::ActActionB);
+		//EnhancedInputComponent->BindAction(InputActionLT, ETriggerEvent::Triggered, this, &AToyBounceBall::ActActionLT);
 	}
 }
 
@@ -170,17 +175,30 @@ void AToyBounceBall::PossessedBy(AController* NewController)
 
 	if (ASC != nullptr)
 	{
-		FGameplayAbilitySpec GameplayAbilityActionASpec(GameplayAbilityActionA);
-		GameplayAbilityActionASpec.InputID = 0;
-		ASC->GiveAbility(GameplayAbilityActionASpec);
+		for (const auto& GameplayStartAbility : GameplayStartAbilities)
+		{
+			FGameplayAbilitySpec GameplayAbilitySpec(GameplayStartAbility);
+			ASC->GiveAbility(GameplayAbilitySpec);
+		}
 
-		FGameplayAbilitySpec GameplayAbilityActionBSpec(GameplayAbilityActionB);
-		GameplayAbilityActionBSpec.InputID = 1;
-		ASC->GiveAbility(GameplayAbilityActionBSpec);
+		for (const auto& GameplayActionAbility : GameplayActionAbilities)
+		{
+			FGameplayAbilitySpec GameplayAbilityActionSpec(GameplayActionAbility.Value);
+			GameplayAbilityActionSpec.InputID = GameplayActionAbility.Key;
+			ASC->GiveAbility(GameplayAbilityActionSpec);
+		}
 
-		FGameplayAbilitySpec GameplayAbilityActionLTSpec(GameplayAbilityActionLT);
-		GameplayAbilityActionLTSpec.InputID = 2;
-		ASC->GiveAbility(GameplayAbilityActionLTSpec);
+		//FGameplayAbilitySpec GameplayAbilityActionASpec(GameplayAbilityActionA);
+		//GameplayAbilityActionASpec.InputID = 0;
+		//ASC->GiveAbility(GameplayAbilityActionASpec);
+
+		//FGameplayAbilitySpec GameplayAbilityActionBSpec(GameplayAbilityActionB);
+		//GameplayAbilityActionBSpec.InputID = 1;
+		//ASC->GiveAbility(GameplayAbilityActionBSpec);
+
+		//FGameplayAbilitySpec GameplayAbilityActionLTSpec(GameplayAbilityActionLT);
+		//GameplayAbilityActionLTSpec.InputID = 2;
+		//ASC->GiveAbility(GameplayAbilityActionLTSpec);
 	}
 
 	// 시작할 때 자동으로 콘솔 입력
@@ -188,21 +206,23 @@ void AToyBounceBall::PossessedBy(AController* NewController)
 	PlayerController->ConsoleCommand(TEXT("showdebug abilitysystem"));
 }
 
-void AToyBounceBall::BounceWhenHittingGround()
-{
-	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+// 구조 수정
 
-	if (MovementComponent == nullptr)
-	{
-		return;
-	}
-
-	if (MovementComponent->IsFalling() == false)
-	{
-		FVector BounceVector(0, 0, BounceGroundPower);
-		LaunchCharacter(BounceVector, false, true);
-	}
-}
+//void AToyBounceBall::BounceWhenHittingGround()
+//{
+//	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+//
+//	if (MovementComponent == nullptr)
+//	{
+//		return;
+//	}
+//
+//	if (MovementComponent->IsFalling() == false)
+//	{
+//		FVector BounceVector(0, 0, BounceGroundPower);
+//		LaunchCharacter(BounceVector, false, true);
+//	}
+//}
 
 void AToyBounceBall::FixXVelocityZero()
 {
@@ -228,67 +248,88 @@ void AToyBounceBall::Move(const FInputActionValue& Value)
 
 	//UE_LOG(LogTemp, Log, TEXT("Move X: %f \t Move Y: %f"), MovementVector.X, MovementVector.Y);
 
-	AddMovementInput(FVector(0, 1, 0), FMath::Sign(MovementVector.X));
+	MoveInputXDirection = FMath::Sign(MovementVector.X);
+
+	AddMovementInput(FVector(0, 1, 0), MoveInputXDirection);
 }
 
-void AToyBounceBall::ActActionA()
+//void AToyBounceBall::ActActionA()
+//{
+//	UE_LOG(LogTemp, Log, TEXT("Action A"));
+//
+//	//if (IsValid (BouneBallMovementComponent))
+//	//{
+//	//	BouneBallMovementComponent->Velocity = FVector::ZeroVector;
+//	//}
+//
+//	if (ASC != nullptr)
+//	{
+//		FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(0);
+//		if (Spec != nullptr)
+//		{
+//			if (Spec->IsActive())
+//			{
+//				ASC->AbilitySpecInputPressed(*Spec);
+//			}
+//			else
+//			{
+//				ASC->TryActivateAbility(Spec->Handle);
+//			}
+//		}
+//	}
+//	//else
+//	//{
+//	//	UE_LOG(LogTemp, Log, TEXT("NO ASC!!"));
+//	//}
+//}
+
+//void AToyBounceBall::ActActionB()
+//{
+//	UE_LOG(LogTemp, Log, TEXT("Action B"));
+//
+//	if (ASC != nullptr)
+//	{
+//		FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(1);
+//		if (Spec != nullptr)
+//		{
+//			if (Spec->IsActive())
+//			{
+//				ASC->AbilitySpecInputPressed(*Spec);
+//			}
+//			else
+//			{
+//				ASC->TryActivateAbility(Spec->Handle);
+//			}
+//		}
+//	}
+//}
+//
+//void AToyBounceBall::ActActionLT()
+//{
+//	UE_LOG(LogTemp, Log, TEXT("Action LT"));
+//
+//	if (ASC != nullptr)
+//	{
+//		FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(2);
+//		if (Spec != nullptr)
+//		{
+//			if (Spec->IsActive())
+//			{
+//				ASC->AbilitySpecInputPressed(*Spec);
+//			}
+//			else
+//			{
+//				ASC->TryActivateAbility(Spec->Handle);
+//			}
+//		}
+//	}
+//}
+
+void AToyBounceBall::ActActionByInputID(int32 InputID)
 {
-	UE_LOG(LogTemp, Log, TEXT("Action A"));
-
-	//if (IsValid (BouneBallMovementComponent))
-	//{
-	//	BouneBallMovementComponent->Velocity = FVector::ZeroVector;
-	//}
-
 	if (ASC != nullptr)
 	{
-		FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(0);
-		if (Spec != nullptr)
-		{
-			if (Spec->IsActive())
-			{
-				ASC->AbilitySpecInputPressed(*Spec);
-			}
-			else
-			{
-				ASC->TryActivateAbility(Spec->Handle);
-			}
-		}
-	}
-	//else
-	//{
-	//	UE_LOG(LogTemp, Log, TEXT("NO ASC!!"));
-	//}
-}
-
-void AToyBounceBall::ActActionB()
-{
-	UE_LOG(LogTemp, Log, TEXT("Action B"));
-
-	if (ASC != nullptr)
-	{
-		FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(1);
-		if (Spec != nullptr)
-		{
-			if (Spec->IsActive())
-			{
-				ASC->AbilitySpecInputPressed(*Spec);
-			}
-			else
-			{
-				ASC->TryActivateAbility(Spec->Handle);
-			}
-		}
-	}
-}
-
-void AToyBounceBall::ActActionLT()
-{
-	UE_LOG(LogTemp, Log, TEXT("Action LT"));
-
-	if (ASC != nullptr)
-	{
-		FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(2);
+		FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(InputID);
 		if (Spec != nullptr)
 		{
 			if (Spec->IsActive())
@@ -323,6 +364,7 @@ void AToyBounceBall::BallCollisionHit(UPrimitiveComponent* HitComponent, AActor*
 
 	// 벽면과 부딪힌 경우
 	float DotProductFloat = FVector::DotProduct(Hit.ImpactNormal, FVector(0, 1, 0));
+	float DotProductFloatZ = FVector::DotProduct(Hit.ImpactNormal, FVector(0, 0, 1));
 
 	if (FMath::Abs(DotProductFloat) > 0.5f)
 	{
@@ -331,6 +373,15 @@ void AToyBounceBall::BallCollisionHit(UPrimitiveComponent* HitComponent, AActor*
 		{
 			BouneBallMovementComponent->Velocity = FVector(0, FMath::Sign(DotProductFloat) * BounceWallPower, BounceWallPowerZ);
 		}
+	}
+	else if (DotProductFloatZ > 0.5f)
+	{
+		//if (IsValid(BouneBallMovementComponent))
+		//{
+		//	BouneBallMovementComponent->Velocity = FVector(0, 0, BounceGroundPower);
+		//}
+		FVector BounceVector(0, 0, BounceGroundPower);
+		LaunchCharacter(BounceVector, false, true);
 	}
 }
 
