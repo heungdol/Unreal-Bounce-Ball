@@ -3,12 +3,10 @@
 
 #include "GAS/GA/GameplayAbility_Dash.h"
 
-#include "GameplayAbilities/Public/Abilities/Tasks/AbilityTask_MoveToLocation.h"
-
+//#include "GameplayAbilities/Public/Abilities/Tasks/AbilityTask_MoveToLocation.h"
+#include "GAS/AT/AbilityTask_MoveSweepToLocation.h"
 
 #include "Components/CapsuleComponent.h"
-
-#include "Character/ToyBounceBall.h"
 
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -19,6 +17,8 @@
 UGameplayAbility_Dash::UGameplayAbility_Dash()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+
+	bIsActivaed = false;
 }
 
 void UGameplayAbility_Dash::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
@@ -42,45 +42,44 @@ void UGameplayAbility_Dash::ActivateAbility(const FGameplayAbilitySpecHandle Han
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	UE_LOG(LogTemp, Log, TEXT("Activate Ability Dash"));
+	ACharacter* MyCharacter = nullptr;
+	UCharacterMovementComponent* MyCharacterMovementComponent = nullptr;
+	FVector InputVector = FVector::ZeroVector;
 
-	AToyBounceBall* BounceBall = Cast <AToyBounceBall> (ActorInfo->AvatarActor);
-
-	//if (BounceBall == nullptr)
-	//{
-	//	UE_LOG(LogTemp, Log, TEXT("Can not Find Pawn from Ability Dash"));
-	//}
-
-	if (BounceBall != nullptr && FMath::Abs (BounceBall->GetMoveInputXDirection()) > SMALL_NUMBER )
+	if (ActorInfo != nullptr)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Setting Ability Dash "));
+		MyCharacter = Cast <ACharacter>(ActorInfo->AvatarActor);
+		InputVector = MyCharacter->GetPendingMovementInputVector();
 
+		//UE_LOG(LogTemp, Log, TEXT("Assess To Character "));
+	}
+
+	if (MyCharacter != nullptr)
+	{
+		MyCharacterMovementComponent = MyCharacter->GetCharacterMovement();
+	}
+
+	//UE_LOG(LogTemp, Log, TEXT("%f"), InputVector.Y);
+
+	if (MyCharacter != nullptr
+		&& MyCharacterMovementComponent != nullptr
+		&& FMath::Abs (InputVector.Y) > SMALL_NUMBER )
+	{
 		FVector EndLocation(0, 0, 0);
-		EndLocation = BounceBall->GetActorLocation() + FVector(0, BounceBall->GetMoveInputXDirection() * DashDistance, 0);
+		EndLocation = MyCharacter->GetActorLocation() + FVector(0, FMath::Sign (InputVector.Y) * DashDistance, 0);
 
-		UAbilityTask_MoveToLocation* AbilityTask = UAbilityTask_MoveToLocation::MoveToLocation
+		UAbilityTask_MoveSweepToLocation* AbilityTask = UAbilityTask_MoveSweepToLocation::MoveSweepToLocation
 		(this, TEXT("Dash"), EndLocation, DashDuration, DashCurveFloat, nullptr);
 
 		AbilityTask->OnTargetLocationReached.AddDynamic(this, &UGameplayAbility_Dash::EndAbilityCallback);
 		AbilityTask->ReadyForActivation();
 
-		//if (BounceBall->GetCapsuleComponent() != nullptr)
-		//{
-		//	UE_LOG(LogTemp, Log, TEXT("GetCapsuleComponent"));
-		//	BounceBall->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &UGameplayAbility_Dash::EndAbilityByHitCallback);
-		//}
-		//
-		UE_LOG(LogTemp, Log, TEXT("ReadyForActivation Dash "));
-
-		/*FGameplayEventData PayloadData;
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(ActorInfo->AvatarActor, ActivationOwnedTags.GetByIndex(0), PayloadData);*/
-
-		UE_LOG(LogTemp, Log, TEXT("Trigger Ability"));
+		MyCharacterMovementComponent->SetMovementMode(EMovementMode::MOVE_None);
+		bIsActivaed = true;
 	}
 	else
 	{
-		UE_LOG(LogTemp, Log, TEXT("Can not Activate Dash Ability"));
-
+		// Can not activate this ability 
 		EndAbilityCallback();
 	}
 }
@@ -94,13 +93,27 @@ void UGameplayAbility_Dash::EndAbility(const FGameplayAbilitySpecHandle Handle, 
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
-	ACharacter* Ball = Cast <ACharacter>(ActorInfo->AvatarActor);
-	if (Ball != nullptr)
+	if (bIsActivaed == (int8)true)
 	{
-		UCharacterMovementComponent* BallMovementComponent = Ball->GetCharacterMovement();
-		if (BallMovementComponent != nullptr)
+		bIsActivaed = false;
+
+		ACharacter* MyCharacter = nullptr;
+		UCharacterMovementComponent* MyCharacterMovementComponent = nullptr;
+
+		if (ActorInfo != nullptr)
 		{
-			BallMovementComponent->Velocity = FVector::ZeroVector;
+			MyCharacter = Cast <ACharacter>(ActorInfo->AvatarActor);
+		}
+		
+		if (MyCharacter != nullptr)
+		{
+			MyCharacterMovementComponent = MyCharacter->GetCharacterMovement();
+		}
+
+		if (MyCharacterMovementComponent != nullptr)
+		{
+			MyCharacterMovementComponent->SetMovementMode(EMovementMode::MOVE_Falling);
+			MyCharacterMovementComponent->Velocity = FVector::ZeroVector;
 		}
 	}
 }
@@ -113,18 +126,4 @@ void UGameplayAbility_Dash::EndAbilityCallback()
 	bool bWasCancelled = false;
 
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
-
-	UE_LOG(LogTemp, Log, TEXT("End Ability Dash"));
 }
-
-//void UGameplayAbility_Dash::EndAbilityByHitCallback(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
-//{
-//	//// 네트워크 관련 인자
-//	//bool bReplicatedEndAbility = true;
-//	//// 취소된 경우
-//	//bool bWasCancelled = false;
-//
-//	//EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
-//
-//	//UE_LOG(LogTemp, Log, TEXT("End Ability Dash"));
-//}

@@ -4,21 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "GameplayAbility_Dash.generated.h"
+#include "GameplayAbility_CharacterStomp.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class TOYPROJECT_API UGameplayAbility_Dash : public UGameplayAbility
+class TOYPROJECT_API UGameplayAbility_CharacterStomp : public UGameplayAbility
 {
 	GENERATED_BODY()
 	
 public:
+	UGameplayAbility_CharacterStomp();
 
-	UGameplayAbility_Dash();
-
-public:
 	/** Input binding stub. */
 	virtual void InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 
@@ -39,25 +37,21 @@ public:
 	/** Native function, called if an ability ends normally or abnormally. If bReplicate is set to true, try to replicate the ending to the client/server */
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
-	UFUNCTION ()
-	void EndAbilityCallback();
+	
+	UFUNCTION()
+	void EndAbilityCallback ();
 
 	//UFUNCTION()
-	//void EndAbilityByHitCallback(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	//void StompBounceCallback ();
+
 protected:
 
-	UPROPERTY (BlueprintReadWrite, EditDefaultsOnly, Category=GAS)
-	float DashDistance = 500.0f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Stomp)
+	float StompMoveSpeed = 1000;
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = GAS)
-	float DashDuration = 0.5f;
+	UPROPERTY (EditDefaultsOnly, BlueprintReadOnly, Category = Stomp)
+	float StompBouncePower = 4000;
 
-	UPROPERTY(EditDefaultsOnly, Category = GAS)
-	UCurveFloat* DashCurveFloat;
-
-	UPROPERTY(EditDefaultsOnly, Category = GAS)
-	class UCurveVector* DashCurveVector;
-
-	// UPROPERTY가 먹히지 않는다...
 	int8 bIsActivaed : 1;
+
 };

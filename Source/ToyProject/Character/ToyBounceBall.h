@@ -44,12 +44,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = GAS)
 	TMap <int32, TSubclassOf <class UGameplayAbility>> GameplayActionAbilities;
 
-	//UPROPERTY(EditAnywhere, Category = GAS)
-	//TSubclassOf <class UGameplayAbility> GameplayAbilityActionB;
-
-	//UPROPERTY(EditAnywhere, Category = GAS)
-	//TSubclassOf <class UGameplayAbility> GameplayAbilityActionLT;
-
 // Ball Setting
 public:
 	UPROPERTY (EditDefaultsOnly, Category=BounceBall)
@@ -74,11 +68,6 @@ public:
 	float RandomPower = 2000.0f;
 
 
-
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr <class UCharacterMovementComponent> BouneBallMovementComponent;
-
-
 	UPROPERTY(EditDefaultsOnly, Category = Camera)
 	TObjectPtr <class USpringArmComponent> SpringArmComponent;
 
@@ -92,36 +81,40 @@ public:
 	TObjectPtr <class UInputAction> InputActionMove;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TMap<int32, TObjectPtr <class UInputAction>> InputActions;
+	TMap<int32, TObjectPtr <class UInputAction>> InputPressedActions;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//TObjectPtr <class UInputAction> InputActionB;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	TMap<int32, TObjectPtr <class UInputAction>> InputReleasedActions;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//TObjectPtr <class UInputAction> InputActionLT;
+	UPROPERTY()
+	float InputAxisMoveX = 0;
 
-
-	void Move(const struct FInputActionValue& Value);
-
-	float MoveInputXDirection = 0;
-
-	FORCEINLINE float GetMoveInputXDirection() const { return MoveInputXDirection; }
-
-	//void BounceWhenHittingGround();
+	// Functions
+public:
+	void MoveByAxisInput(const struct FInputActionValue& Value);
 
 	void FixXVelocityZero();
 	void FixXLocationZero();
-	
-	//void ActActionA();
-	//void ActActionB();
-	//void ActActionLT();
 
-	void ActActionByInputID(int32 InputID);
+	float GetInputAxisMoveX() const;
+
+	void BindPressedActionByInputID(int32 InputID);
+	void BindReleasedActionByInputID(int32 InputID);
+
 
 	UFUNCTION ()
 	void BallCollisionHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	//UFUNCTION ()
+	//void SetMovementStateFalling();
+
+	//UFUNCTION()
+	//void SetMovementStateNone();
+
+	//UFUNCTION()
+	//void SetMovementVelocityZero();
+
+
 	// Ability로 뺄 예정
 	void MoveRandom();
-	
 };
