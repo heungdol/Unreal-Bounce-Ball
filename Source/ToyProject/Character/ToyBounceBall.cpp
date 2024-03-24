@@ -4,7 +4,7 @@
 #include "ToyBounceBall.h"
 
 #include "Components/StaticMeshComponent.h"
-#include "GameFramework/SpringArmComponent.h"
+//#include "GameFramework/SpringArmComponent.h"
 //#include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -24,7 +24,7 @@
 #include "AbilitySystemInterface.h"
 
 #include "Camera/ToyCameraComponent.h"
-
+#include "Camera/ToySpringArmComponent.h"
 
 // Sets default values
 AToyBounceBall::AToyBounceBall()
@@ -54,14 +54,14 @@ AToyBounceBall::AToyBounceBall()
 	}
 	
 	// 카메라 / 스프링 암 생성
-	if (SpringArmComponent = CreateDefaultSubobject <USpringArmComponent>(TEXT("Camera Spring Arm")))
+	if (SpringArmComponent = CreateDefaultSubobject <UToySpringArmComponent>(TEXT("Camera Spring Arm")))
 	{
 		SpringArmComponent->SetupAttachment(RootComponent);
 		SpringArmComponent->TargetArmLength = 3000.0f;
 		
-		SpringArmComponent->bEnableCameraLag = true;
-		SpringArmComponent->CameraLagMaxDistance = 0.0f;
-		SpringArmComponent->CameraLagSpeed = 1.0f;
+		//SpringArmComponent->bEnableCameraLag = true;
+		//SpringArmComponent->CameraLagMaxDistance = 0.0f;
+		//SpringArmComponent->CameraLagSpeed = 1.0f;
 	}
 
 	if (CameraComponent = CreateDefaultSubobject <UToyCameraComponent>(TEXT("Camera Component")))
@@ -154,6 +154,8 @@ void AToyBounceBall::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		{
 			EnhancedInputComponent->BindAction(InputAction.Value, ETriggerEvent::Completed, this, &AToyBounceBall::BindReleasedActionByInputID, InputAction.Key);
 		}
+
+		UE_LOG(LogTemp, Log, TEXT("Init Ball"));
 	}
 }
 

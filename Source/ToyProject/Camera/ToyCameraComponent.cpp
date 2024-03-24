@@ -8,6 +8,7 @@
 
 #include "Kismet/KismetMathLibrary.h"
 
+#include "Math/UnrealMathUtility.h"
 
 UToyCameraComponent::UToyCameraComponent(const FObjectInitializer& ObjectInitializer)
 	: Super (ObjectInitializer)
@@ -38,8 +39,12 @@ void UToyCameraComponent::GetCameraView(float DeltaTime, FMinimalViewInfo& Desir
 		FVector CurrentCharacterVelocity = CharacterMovementComponent->Velocity;
 		float CurrentCharacterVelocityLenght = CurrentCharacterVelocity.Length();
 
-		CurrentFOVOffset = UKismetMathLibrary::MapRangeClamped
+		DesiredFOVOffset = UKismetMathLibrary::MapRangeClamped
 		(CurrentCharacterVelocityLenght, 0, CharacterMovespeedMax, 0, FOVOffsetMax);
+
+		CurrentFOVOffset = FMath::FInterpTo(PrevFOVOffset, DesiredFOVOffset, DeltaTime, FOVOffsetInterpSpeed);
+
+		PrevFOVOffset = CurrentFOVOffset;
 
 		DesiredView.FOV = DesiredView.FOV + CurrentFOVOffset;
 	}

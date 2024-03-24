@@ -69,7 +69,7 @@ public:
 
 
 	UPROPERTY(EditDefaultsOnly, Category = Camera)
-	TObjectPtr <class USpringArmComponent> SpringArmComponent;
+	TObjectPtr <class UToySpringArmComponent> SpringArmComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = Camera)
 	TObjectPtr <class UToyCameraComponent> CameraComponent;

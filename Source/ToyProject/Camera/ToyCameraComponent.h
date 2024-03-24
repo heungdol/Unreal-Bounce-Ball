@@ -26,10 +26,16 @@ public:
 	//UPROPERTY ()
 	//class ACharacter* TargetCharacter;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
 	bool bFOVOffsetByCharacterMovement;
 
-	UPROPERTY (VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+	float PrevFOVOffset;
+
+	UPROPERTY (VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+	float DesiredFOVOffset;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	float CurrentFOVOffset;
 
 	//
@@ -37,14 +43,19 @@ public:
 	//UPROPERTY (EditDefaultsOnly, BlueprintReadWrite)
 	//float FOVOffsetMin = 0;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Camera)
 	float FOVOffsetMax = 20;
+
+	//
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Camera)
+	float FOVOffsetInterpSpeed = 1;
 
 	//
 
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	//float FOVOffsetMin = -5;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Camera)
 	float CharacterMovespeedMax = 1000;
 };
