@@ -36,7 +36,7 @@ void UAbilityTask_MoveToGround::Activate()
 {
 	Super::Activate();
 
-	UE_LOG(LogTemp, Log, TEXT("Move to Ground Task Activate"));
+	//UE_LOG(LogTemp, Log, TEXT("Move to Ground Task Activate"));
 
 	//AActor* MyActor = GetAvatarActor();
 	//ACharacter* MyCharacter = nullptr;
@@ -54,7 +54,7 @@ void UAbilityTask_MoveToGround::Activate()
 
 void UAbilityTask_MoveToGround::TickTask(float DeltaTime)
 {
-	UE_LOG(LogTemp, Log, TEXT("Move to Ground Task Tick... Pre"));
+	//UE_LOG(LogTemp, Log, TEXT("Move to Ground Task Tick... Pre"));
 
 	if (bIsFinished)
 	{
@@ -67,7 +67,7 @@ void UAbilityTask_MoveToGround::TickTask(float DeltaTime)
 	ACharacter* MyCharacter = nullptr;
 	UCharacterMovementComponent* MyCharacterMovementComponent = nullptr;
 
-	UE_LOG(LogTemp, Log, TEXT("Move to Ground Task Tick..."));
+	//UE_LOG(LogTemp, Log, TEXT("Move to Ground Task Tick..."));
 
 	if (MyActor)
 	{

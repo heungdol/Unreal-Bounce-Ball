@@ -72,7 +72,7 @@ public:
 	TObjectPtr <class USpringArmComponent> SpringArmComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = Camera)
-	TObjectPtr <class UCameraComponent> CameraComponent;
+	TObjectPtr <class UToyCameraComponent> CameraComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr <class UInputMappingContext> InputMappingContext;

@@ -5,7 +5,7 @@
 
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Camera/CameraComponent.h"
+//#include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -22,6 +22,8 @@
 #include "AbilitySystemComponent.h"
 
 #include "AbilitySystemInterface.h"
+
+#include "Camera/ToyCameraComponent.h"
 
 
 // Sets default values
@@ -62,7 +64,7 @@ AToyBounceBall::AToyBounceBall()
 		SpringArmComponent->CameraLagSpeed = 1.0f;
 	}
 
-	if (CameraComponent = CreateDefaultSubobject <UCameraComponent>(TEXT("Camera Component")))
+	if (CameraComponent = CreateDefaultSubobject <UToyCameraComponent>(TEXT("Camera Component")))
 	{
 		CameraComponent->SetupAttachment(SpringArmComponent);
 	}
