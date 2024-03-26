@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/Tasks/AbilityTask_MoveToLocation.h"
+
+#include "Abilities/Tasks/AbilityTask.h"
+
 #include "AbilityTask_MoveSweepToLocation.generated.h"
 
 /**
@@ -29,8 +32,10 @@ public:
 	UFUNCTION ()
 	void HitCallback(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	//void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
+
 protected:
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	FVector PrevLocation;
 
 	//UPROPERTY()

@@ -16,9 +16,10 @@
 
 UGameplayAbility_Dash::UGameplayAbility_Dash()
 {
-	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerExecution;
 
 	bIsActivaed = false;
+	//bReplicateInputDirectly = true;
 }
 
 void UGameplayAbility_Dash::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
@@ -34,7 +35,48 @@ void UGameplayAbility_Dash::InputReleased(const FGameplayAbilitySpecHandle Handl
 bool UGameplayAbility_Dash::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const
 {
 	bool ActivateResult = Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
-	
+
+	ACharacter* MyCharacter = nullptr;
+	if (ActorInfo != nullptr)
+	{
+		MyCharacter = Cast <ACharacter>(GetAvatarActorFromActorInfo ());
+	}
+	APlayerController* MyPlayerController = nullptr;
+	UCharacterMovementComponent* MyCharacterMovementComponent = nullptr;
+	FVector InputVector = FVector::ZeroVector;
+
+	///*MyPlayerController->*/
+
+	//if (ActorInfo != nullptr)
+	//{
+		MyCharacter = Cast <ACharacter>(ActorInfo->AvatarActor);
+		if (MyCharacter != nullptr)
+		{
+			MyCharacterMovementComponent = MyCharacter->GetCharacterMovement();
+		}
+	//}
+
+	if (MyCharacterMovementComponent != nullptr)
+	{
+		InputVector = MyCharacter->GetPendingMovementInputVector();
+	}
+
+	//if (MyCharacter != nullptr && MyCharacter->IsLocallyControlled())
+	//{
+	//	UE_LOG(LogTemp, Log, TEXT("Client %f"), InputVector.Y);
+	//}
+	//else
+	//{
+	//	UE_LOG(LogTemp, Log, TEXT("Server %f"), InputVector.Y);
+	//}
+
+	////if (MyCharacter == nullptr || MyCharacter->IsLocallyControlled() == false)
+	////{
+	////	return ActivateResult;
+	////}
+
+	////ActivateResult &= (FMath::Abs(MyCharacter->GetPendingMovementInputVector().Y) > SMALL_NUMBER);
+
 	return ActivateResult;
 }
 
@@ -44,14 +86,12 @@ void UGameplayAbility_Dash::ActivateAbility(const FGameplayAbilitySpecHandle Han
 
 	ACharacter* MyCharacter = nullptr;
 	UCharacterMovementComponent* MyCharacterMovementComponent = nullptr;
-	FVector InputVector = FVector::ZeroVector;
+	//FVector InputVector = FVector::ZeroVector;
 
 	if (ActorInfo != nullptr)
 	{
 		MyCharacter = Cast <ACharacter>(ActorInfo->AvatarActor);
-		InputVector = MyCharacter->GetPendingMovementInputVector();
-
-		//UE_LOG(LogTemp, Log, TEXT("Assess To Character "));
+		//InputVector = MyCharacter->GetPendingMovementInputVector();
 	}
 
 	if (MyCharacter != nullptr)
@@ -59,14 +99,12 @@ void UGameplayAbility_Dash::ActivateAbility(const FGameplayAbilitySpecHandle Han
 		MyCharacterMovementComponent = MyCharacter->GetCharacterMovement();
 	}
 
-	//UE_LOG(LogTemp, Log, TEXT("%f"), InputVector.Y);
-
 	if (MyCharacter != nullptr
 		&& MyCharacterMovementComponent != nullptr
-		&& FMath::Abs (InputVector.Y) > SMALL_NUMBER )
+		/*&& MyCharacter->IsLocallyControlled() == true*/)
 	{
 		FVector EndLocation(0, 0, 0);
-		EndLocation = MyCharacter->GetActorLocation() + FVector(0, FMath::Sign (InputVector.Y) * DashDistance, 0);
+		EndLocation = MyCharacter->GetActorLocation() + FVector(0, DashDistance, 0);
 
 		UAbilityTask_MoveSweepToLocation* AbilityTask = UAbilityTask_MoveSweepToLocation::MoveSweepToLocation
 		(this, TEXT("Dash"), EndLocation, DashDuration, DashCurveFloat, nullptr);
@@ -74,7 +112,7 @@ void UGameplayAbility_Dash::ActivateAbility(const FGameplayAbilitySpecHandle Han
 		AbilityTask->OnTargetLocationReached.AddDynamic(this, &UGameplayAbility_Dash::EndAbilityCallback);
 		AbilityTask->ReadyForActivation();
 
-		MyCharacterMovementComponent->SetMovementMode(EMovementMode::MOVE_None);
+		//MyCharacterMovementComponent->SetMovementMode(EMovementMode::MOVE_None);
 		bIsActivaed = true;
 	}
 	else
@@ -110,11 +148,11 @@ void UGameplayAbility_Dash::EndAbility(const FGameplayAbilitySpecHandle Handle, 
 			MyCharacterMovementComponent = MyCharacter->GetCharacterMovement();
 		}
 
-		if (MyCharacterMovementComponent != nullptr)
-		{
-			MyCharacterMovementComponent->SetMovementMode(EMovementMode::MOVE_Falling);
-			MyCharacterMovementComponent->Velocity = FVector::ZeroVector;
-		}
+		//if (MyCharacterMovementComponent != nullptr)
+		//{
+		//	MyCharacterMovementComponent->SetMovementMode(EMovementMode::MOVE_Falling);
+		//	MyCharacterMovementComponent->Velocity = FVector::ZeroVector;
+		//}
 	}
 }
 

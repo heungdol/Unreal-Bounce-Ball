@@ -93,8 +93,10 @@ void UAbilityTask_MoveToGround::TickTask(float DeltaTime)
 	else
 	{
 		//MyCharacterMovementComponent->Velocity.Z = MoveSpeed * -1.0f;
-		MyCharacterMovementComponent->Velocity = FVector::ZeroVector;
-		MyActor->AddActorWorldOffset(FVector(0, 0, MoveSpeed * -1.0f * DeltaTime));
+		MyCharacterMovementComponent->Velocity = FVector(0, 0, MoveSpeed * -1.0f/* * DeltaTime*/);
+		MyCharacterMovementComponent->UpdateComponentVelocity();
+
+		//MyActor->AddActorWorldOffset(FVector(0, 0, MoveSpeed * -1.0f * DeltaTime));
 	}
 	
 	//else

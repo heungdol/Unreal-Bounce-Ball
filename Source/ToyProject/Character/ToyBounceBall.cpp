@@ -26,6 +26,10 @@
 #include "Camera/ToyCameraComponent.h"
 #include "Camera/ToySpringArmComponent.h"
 
+#include "ToyProject.h"
+
+//#include "Data/ToyBounceBallActionData.h"
+
 // Sets default values
 AToyBounceBall::AToyBounceBall()
 {
@@ -57,7 +61,7 @@ AToyBounceBall::AToyBounceBall()
 	if (SpringArmComponent = CreateDefaultSubobject <UToySpringArmComponent>(TEXT("Camera Spring Arm")))
 	{
 		SpringArmComponent->SetupAttachment(RootComponent);
-		SpringArmComponent->TargetArmLength = 3000.0f;
+		SpringArmComponent->TargetArmLength = 3000.0f;		
 		
 		//SpringArmComponent->bEnableCameraLag = true;
 		//SpringArmComponent->CameraLagMaxDistance = 0.0f;
@@ -99,6 +103,8 @@ AToyBounceBall::AToyBounceBall()
 
 		GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AToyBounceBall::BallCollisionHit);
 	}
+
+	bReplicates = true;
 }
 
 // Called when the game starts or when spawned
@@ -115,7 +121,18 @@ void AToyBounceBall::BeginPlay()
 		{
 			Subsystem->AddMappingContext(InputMappingContext, 0);
 		}
-	}	
+
+		//PlayerController->SetINput
+	}
+
+	//if (ASC == nullptr)
+	//{
+	//	TOY_LOG(LogTemp, Log, TEXT("ASC is nullptr"));
+	//}
+	//else
+	//{
+	//	TOY_LOG(LogTemp, Log, TEXT("ASC is valid"));
+	//}
 }
 
 // Called every frame
@@ -129,13 +146,21 @@ void AToyBounceBall::Tick(float DeltaTime)
 
 	// 병든 공튀기기
 	//MoveRandom();
+
+	//APlayerController* PlayerController = Cast <APlayerController>(GetController());
+	//if (PlayerController != nullptr)
+	//{
+	//	float TestInput = PlayerController->GetInputAnalogKeyState(EKeys::Left);
+
+	//	TOY_LOG(LogTemp, Log, TEXT("%f"), TestInput);
+	//}
 }
 
 // Called to bind functionality to input
 void AToyBounceBall::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	
+
 	// Input Action 매핑
 	if (UEnhancedInputComponent* EnhancedInputComponent
 		= Cast <UEnhancedInputComponent>(PlayerInputComponent))
@@ -147,15 +172,15 @@ void AToyBounceBall::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		for (const auto& InputAction : InputPressedActions)
 		{
 			EnhancedInputComponent->BindAction(InputAction.Value, ETriggerEvent::Triggered, this, &AToyBounceBall::BindPressedActionByInputID, InputAction.Key);
-		}
-
-		// 명목상 릴리즈 액션도 만들어 놓음
-		for (const auto& InputAction : InputReleasedActions)
-		{
 			EnhancedInputComponent->BindAction(InputAction.Value, ETriggerEvent::Completed, this, &AToyBounceBall::BindReleasedActionByInputID, InputAction.Key);
 		}
 
-		UE_LOG(LogTemp, Log, TEXT("Init Ball"));
+		// 명목상 릴리즈 액션도 만들어 놓음
+		//for (const auto& InputAction : InputReleasedActions)
+		//{
+		//}
+
+		//UE_LOG(LogTemp, Log, TEXT("Init Ball"));
 	}
 }
 
@@ -168,31 +193,29 @@ void AToyBounceBall::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	if (AToyPlayerState* ToyPlayerState =  GetPlayerState <AToyPlayerState>())   //Cast <AToyPlayerState>(NewController))
-	{
-		ASC = ToyPlayerState->GetAbilitySystemComponent();
-		ASC->InitAbilityActorInfo(ToyPlayerState, this);
-	}
-
-	if (ASC != nullptr)
-	{
-		for (const auto& GameplayStartAbility : GameplayStartAbilities)
-		{
-			FGameplayAbilitySpec GameplayAbilitySpec(GameplayStartAbility);
-			ASC->GiveAbility(GameplayAbilitySpec);
-		}
-
-		for (const auto& GameplayActionAbility : GameplayActionAbilities)
-		{
-			FGameplayAbilitySpec GameplayAbilityActionSpec(GameplayActionAbility.Value);
-			GameplayAbilityActionSpec.InputID = GameplayActionAbility.Key;
-			ASC->GiveAbility(GameplayAbilityActionSpec);
-		}
-	}
+	// 일반 클라이언트에서는 호출되지 않음
+	SetupGAS();
 
 	// 시작할 때 자동으로 콘솔 입력
 	APlayerController* PlayerController = CastChecked <APlayerController>(NewController);
 	PlayerController->ConsoleCommand(TEXT("showdebug abilitysystem"));
+
+	//if (ASC != nullptr)
+	//{
+	//	TOY_LOG(LogTemp, Log, TEXT("ASC Name: %s"), *ASC->GetName());
+	//}
+	//else
+	//{
+	//	TOY_LOG(LogTemp, Log, TEXT("ASC Name: No ASC"));
+	//}
+}
+
+void AToyBounceBall::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	// 일반 클라이언트에서 수행
+	SetupGAS();
 }
 
 void AToyBounceBall::FixXVelocityZero()
@@ -202,6 +225,7 @@ void AToyBounceBall::FixXVelocityZero()
 	NewVelocity.X = 0;
 
 	GetCharacterMovement()->Velocity = NewVelocity;
+	GetCharacterMovement()->UpdateComponentVelocity();
 }
 
 void AToyBounceBall::FixXLocationZero()
@@ -217,14 +241,37 @@ void AToyBounceBall::MoveByAxisInput(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get <FVector2D>();
 
-	InputAxisMoveX = FMath::Sign(MovementVector.X);
-	InputAxisMoveX = (FMath::Abs(MovementVector.X) < SMALL_NUMBER) ? 0.0f : InputAxisMoveX;
+	InputAxisMoveX = (FMath::Abs(MovementVector.X) < SMALL_NUMBER) ? 0.0f : FMath::Sign(MovementVector.X);
 
-	//UE_LOG(LogTemp, Log, TEXT("Move X: %f \t Move Y: %f"), InputAxisMoveX, MovementVector.Y);
-
+	//UE_LOG(LogTemp, Log, TEXT("Move X: %f \t Move Y: %f"), GetLastMovementInputVector().Y, MovementVector.Y);
 
 	AddMovementInput(FVector(0, 1, 0), InputAxisMoveX);
 	//UE_LOG(LogTemp, Log, TEXT("%f"), GetPendingMovementInputVector().Y);
+
+	//if (ASC != nullptr)
+	//{
+	//	if (InputAxisMoveX > SMALL_NUMBER)
+	//	{
+	//		if (InputAxisMoveX < 0)
+	//		{
+	//			ASC->AddReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_LEFT);
+	//			//ASC->RemoveReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_NONE);
+	//			//ASC->RemoveReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_RIGHT);
+	//		}
+	//		else
+	//		{
+	//			//ASC->RemoveReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_LEFT);
+	//			//ASC->RemoveReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_NONE);
+	//			ASC->AddReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_RIGHT);
+	//		}
+	//	}
+	//	else
+	//	{
+	//		//ASC->RemoveReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_LEFT);
+	//		ASC->AddReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_NONE);
+	//		//ASC->RemoveReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_RIGHT);
+	//	}
+	//}
 }
 
 float AToyBounceBall::GetInputAxisMoveX() const
@@ -236,6 +283,8 @@ void AToyBounceBall::BindPressedActionByInputID(int32 InputID)
 {
 	if (ASC == nullptr)
 	{
+		//TOY_LOG(LogTemp, Log, TEXT("No ASC"));
+
 		return;
 	}
 
@@ -270,6 +319,8 @@ void AToyBounceBall::BindReleasedActionByInputID(int32 InputID)
 		if (Spec->IsActive())
 		{
 			ASC->AbilitySpecInputReleased(*Spec);
+
+			//TOY_LOG(LogTemp, Log, TEXT("Released"));
 		}
 	}
 }
@@ -294,6 +345,7 @@ void AToyBounceBall::BallCollisionHit(UPrimitiveComponent* HitComponent, AActor*
 	{
 		// 하드하게 Velocity 설정
 		GetCharacterMovement()->Velocity = FVector(0, FMath::Sign(DotProductFloat) * BounceWallPower, BounceWallPowerZ);
+		GetCharacterMovement()->UpdateComponentVelocity();
 	}
 	else if (DotProductFloatZ > 0.5f)
 	{
@@ -302,50 +354,37 @@ void AToyBounceBall::BallCollisionHit(UPrimitiveComponent* HitComponent, AActor*
 	}
 }
 
-//void AToyBounceBall::SetMovementStateFalling()
-//{
-//	if (IsValid(GetCharacterMovement()) == false)
-//	{
-//		return;
-//	}
-//
-//	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Falling);
-//}
-//
-//void AToyBounceBall::SetMovementStateNone()
-//{
-//	if (IsValid(GetCharacterMovement()) == false)
-//	{
-//		return;
-//	}
-//
-//	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-//}
-//
-//void AToyBounceBall::MoveRandom()
-//{
-//	if (IsValid(GetCharacterMovement()) == false)
-//	{
-//		return;
-//	}
-//
-//	if (bIsMoveRandom == true)
-//	{
-//		float RandomMovePower = FMath::RandRange(0.0f, RandomPower);
-//		FVector RandomMove(FMath::RandRange(-1, 1) * RandomMovePower, FMath::RandRange(-1, 1) * RandomMovePower, 0);
-//		
-//		GetCharacterMovement()->AddForce(RandomMove);
-//	}
-//}
-//
-//void AToyBounceBall::SetMovementVelocityZero()
-//{
-//	if (IsValid(GetCharacterMovement()) == false)
-//	{
-//		return;
-//	}
-//
-//	GetCharacterMovement()->Velocity = FVector::ZeroVector;
-//}
+void AToyBounceBall::SetupGAS()
+{
+	if (ASC != nullptr)
+	{
+		return;
+	}
 
+	if (AToyPlayerState* ToyPlayerState = GetPlayerState <AToyPlayerState>())   //Cast <AToyPlayerState>(NewController))
+	{
+		ASC = ToyPlayerState->GetAbilitySystemComponent();
+		ASC->InitAbilityActorInfo(ToyPlayerState, this);
+	}
+	else
+	{
+		TOY_LOG(LogTemp, Log, TEXT("No PlayerState"));
+	}
 
+	// 서버에서만 수행
+	if (HasAuthority() == true && ASC != nullptr)
+	{
+		for (const auto& GameplayStartAbility : GameplayStartAbilities)
+		{
+			FGameplayAbilitySpec GameplayAbilitySpec(GameplayStartAbility);
+			ASC->GiveAbility(GameplayAbilitySpec);
+		}
+
+		for (const auto& GameplayActionAbility : GameplayActionAbilities)
+		{
+			FGameplayAbilitySpec GameplayAbilityActionSpec(GameplayActionAbility.Value);
+			GameplayAbilityActionSpec.InputID = GameplayActionAbility.Key;
+			ASC->GiveAbility(GameplayAbilityActionSpec);
+		}
+	}
+}

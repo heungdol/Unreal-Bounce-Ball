@@ -9,12 +9,12 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-#include "Net/UnrealNetwork.h"
-
-#include "Engine/World.h"
-
 #include "Components/CapsuleComponent.h"
 
+#include "ToyProject.h"
+
+#include "Net/UnrealNetwork.h"
+#include "Engine/World.h"
 
 UAbilityTask_MoveSweepToLocation* UAbilityTask_MoveSweepToLocation::MoveSweepToLocation
 (UGameplayAbility* OwningAbility, FName TaskInstanceName, FVector Location, float Duration, UCurveFloat* OptionalInterpolationCurve, UCurveVector* OptionalVectorInterpolationCurve)
@@ -32,6 +32,13 @@ UAbilityTask_MoveSweepToLocation* UAbilityTask_MoveSweepToLocation::MoveSweepToL
 	MyObj->TimeMoveWillEnd = MyObj->TimeMoveStarted + MyObj->DurationOfMovement;
 	MyObj->LerpCurve = OptionalInterpolationCurve;
 	MyObj->LerpCurveVector = OptionalVectorInterpolationCurve;
+
+	MyObj->bTickingTask = true;
+	MyObj->bSimulatedTask = true;
+	MyObj->bIsFinished = false;
+
+	//MyObj->ForceNetUpdate();
+
 
 	return MyObj;
 }
@@ -61,35 +68,37 @@ void UAbilityTask_MoveSweepToLocation::Activate()
 
 void UAbilityTask_MoveSweepToLocation::TickTask(float DeltaTime)
 {
+	//if (GetWorld()->GetNetMode() == NM_Client)
+	//{
+	//	return;
+	//}
+	//
+	AActor* MyActor = GetAvatarActor();
+	ACharacter* MyCharacter = nullptr;
+	UCharacterMovementComponent* CharMoveComp = nullptr;
+	if (MyActor)
+	{
+		MyCharacter = Cast<ACharacter>(MyActor);
+		if (MyCharacter)
+		{
+			CharMoveComp = Cast<UCharacterMovementComponent>(MyCharacter->GetMovementComponent());
+		}
+	}
+
+	//if (MyCharacter == nullptr || MyCharacter->IsLocallyControlled() == false)
+	//{
+	//	return;
+	//}
+
 	if (bIsFinished)
 	{
-		//if (MyActor)
-		//{
-		//	FVector NewLocation = StartCharacterLocation + (TargetLocation - PrevLocation);
-		//	MyActor->SetActorLocation(NewLocation, true);
-		//}
-
 		return;
 	}
 
 	UGameplayTask::TickTask(DeltaTime);
-
-	AActor* MyActor = GetAvatarActor();
-	//FVector CurrentCharacterLocation = FVector::ZeroVector;
+	
 	if (MyActor)
 	{
-		ACharacter* MyCharacter = Cast<ACharacter>(MyActor);
-		if (MyCharacter)
-		{
-			UCharacterMovementComponent* CharMoveComp = Cast<UCharacterMovementComponent>(MyCharacter->GetMovementComponent());
-			if (CharMoveComp)
-			{
-				CharMoveComp->SetMovementMode(MOVE_Custom, 0);
-			}
-
-			//CurrentCharacterLocation = MyCharacter->GetActorLocation();
-		}
-
 		float CurrentTime = GetWorld()->GetTimeSeconds();
 
 		if (CurrentTime >= TimeMoveWillEnd)
@@ -100,17 +109,25 @@ void UAbilityTask_MoveSweepToLocation::TickTask(float DeltaTime)
 			//MyActor->TeleportTo(TargetLocation, MyActor->GetActorRotation());
 
 			FVector OffsetLocation = /*CurrentCharacterLocation + */(TargetLocation - PrevLocation);
-			MyActor->AddActorWorldOffset(OffsetLocation, true);
+			//MyActor->AddActorWorldOffset(OffsetLocation, true);
+			CharMoveComp->Velocity = OffsetLocation / DeltaTime;// FVector::ZeroVector;
+			CharMoveComp->UpdateComponentVelocity();
+
 		
-			if (!bIsSimulating)
-			{
-				MyActor->ForceNetUpdate();
+			//if (!bIsSimulating)
+			//{
 				if (ShouldBroadcastAbilityTaskDelegates())
 				{
 					OnTargetLocationReached.Broadcast();
 				}
 				EndTask();
+			//}
+
+			if (MyActor->GetLocalRole() == ROLE_Authority)
+			{
+				MyActor->ForceNetUpdate();
 			}
+
 		}
 		else
 		{
@@ -133,9 +150,22 @@ void UAbilityTask_MoveSweepToLocation::TickTask(float DeltaTime)
 			}
 
 			FVector OffsetLocation = /*CurrentCharacterLocation + */(CurrentLocation - PrevLocation);
-			MyActor->AddActorWorldOffset(OffsetLocation, true);
-
 			PrevLocation = CurrentLocation;
+
+			//UE_LOG(LogTemp, Log, TEXT("Start Location: %s, End Location %s")
+			//	, *StartLocation.ToCompactString(), *TargetLocation.ToCompactString());
+
+			//UE_LOG(LogTemp, Log, TEXT("%f %f %f"), OffsetLocation.X, OffsetLocation.Y, OffsetLocation.Z);
+
+			//MyActor->AddActorWorldOffset(OffsetLocation,  true);
+			CharMoveComp->Velocity = OffsetLocation / DeltaTime;// FVector::ZeroVector;
+			CharMoveComp->UpdateComponentVelocity();
+
+						
+			//if (MyActor->GetLocalRole() == ROLE_Authority)
+			//{
+			//	MyActor->ForceNetUpdate();
+			//}
 		}
 	}
 	else
@@ -151,13 +181,29 @@ void UAbilityTask_MoveSweepToLocation::HitCallback(UPrimitiveComponent* HitCompo
 
 	bIsFinished = true;
 
-	if (!bIsSimulating)
-	{
+	//if (!bIsSimulating)
+	//{
 		if (ShouldBroadcastAbilityTaskDelegates())
 		{
 			OnTargetLocationReached.Broadcast();
 		}
 
+		AActor* MyActor = GetAvatarActor();
+		if (MyActor != nullptr && MyActor->GetLocalRole() == ROLE_Authority)
+		{
+			MyActor->ForceNetUpdate();
+		}
+
 		EndTask();
-	}
+	//}
+}
+
+void UAbilityTask_MoveSweepToLocation::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	DOREPLIFETIME(UAbilityTask_MoveSweepToLocation, StartLocation);
+	DOREPLIFETIME(UAbilityTask_MoveSweepToLocation, TargetLocation);
+	DOREPLIFETIME(UAbilityTask_MoveSweepToLocation, PrevLocation);
+	DOREPLIFETIME(UAbilityTask_MoveSweepToLocation, DurationOfMovement);
+	DOREPLIFETIME(UAbilityTask_MoveSweepToLocation, LerpCurve);
+	DOREPLIFETIME(UAbilityTask_MoveSweepToLocation, LerpCurveVector);
 }

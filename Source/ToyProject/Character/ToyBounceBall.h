@@ -31,6 +31,8 @@ public:
 
 	virtual void PossessedBy(AController* NewController) override;
 
+	virtual void OnRep_PlayerState() override;
+
 // Ability System
 public:
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
@@ -43,6 +45,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = GAS)
 	TMap <int32, TSubclassOf <class UGameplayAbility>> GameplayActionAbilities;
+
+	//UPROPERTY(EditAnywhere, Category = GAS)
+	//TArray <TSubclassOf <class UToyBounceBallActionData>> GameplayActionAbilities;
 
 // Ball Setting
 public:
@@ -83,8 +88,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	TMap<int32, TObjectPtr <class UInputAction>> InputPressedActions;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TMap<int32, TObjectPtr <class UInputAction>> InputReleasedActions;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	//TMap<int32, TObjectPtr <class UInputAction>> InputReleasedActions;
 
 	UPROPERTY()
 	float InputAxisMoveX = 0;
@@ -117,4 +122,7 @@ public:
 
 	// Ability로 뺄 예정
 	void MoveRandom();
+
+protected:
+	void SetupGAS();
 };

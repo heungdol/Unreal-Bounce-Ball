@@ -22,9 +22,11 @@ public:
 
 // Ability System 
 public:
+	virtual void BeginPlay() override;
+
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
-	UPROPERTY(EditAnywhere, Category = GAS)
+	UPROPERTY(/*Replicated, */EditAnywhere, Category = GAS)
 	TObjectPtr <class UAbilitySystemComponent> ASC;
 
 	//UPROPERTY()
