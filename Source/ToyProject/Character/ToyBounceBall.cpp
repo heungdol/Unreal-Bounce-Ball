@@ -28,6 +28,8 @@
 
 #include "ToyProject.h"
 
+#include "Interface/ToyBlockInterface.h"
+
 //#include "Data/ToyBounceBallActionData.h"
 
 // Sets default values
@@ -347,10 +349,17 @@ void AToyBounceBall::BallCollisionHit(UPrimitiveComponent* HitComponent, AActor*
 		GetCharacterMovement()->Velocity = FVector(0, FMath::Sign(DotProductFloat) * BounceWallPower, BounceWallPowerZ);
 		GetCharacterMovement()->UpdateComponentVelocity();
 	}
-	else if (DotProductFloatZ > 0.5f)
+	else if (DotProductFloatZ > SMALL_NUMBER)
 	{
 		FVector BounceVector(0, 0, BounceGroundPower);
 		LaunchCharacter(BounceVector, false, true);
+	}
+
+	// 만약 블록과 부딪힌다면
+	IToyBlockInterface* Block = Cast <IToyBlockInterface>(OtherActor);
+	if (Block != nullptr)
+	{
+		Block->DamageBlock(10);
 	}
 }
 
