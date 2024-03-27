@@ -11,6 +11,9 @@
 
 #include "ToyProject.h"
 
+#include "Component/ToyJellyEffectComponent.h"
+#include "Data/ToyJellyEffectData.h"
+
 // Sets default values
 AToyBlock::AToyBlock()
 {
@@ -25,12 +28,23 @@ AToyBlock::AToyBlock()
 
 	BlockStaticMeshComponent = CreateDefaultSubobject <UStaticMeshComponent>(TEXT("Mesh Component"));
 	BlockStaticMeshComponent->SetupAttachment(BlockBoxComponent);
+	BlockStaticMeshComponent->SetIsReplicated(false);
+	//BlockStaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> BoxMeshRef (TEXT("/Engine/BasicShapes/Cube1.Cube1"));
 	if (BoxMeshRef.Object != nullptr)
 	{
 		BlockStaticMeshComponent->SetStaticMesh(BoxMeshRef.Object);
 	}
+
+	JellyEffectComponent = CreateDefaultSubobject <UToyJellyEffectComponent>(TEXT("Jelly Effect Component"));
+	if (JellyEffectComponent != nullptr)
+	{
+		JellyEffectComponent->SetMeshComponent(BlockStaticMeshComponent);
+	}
+
+	//CurrentHealth = MaxHealth;
+	//bIsActiveBlock = true;
 }
 
 void AToyBlock::OnConstruction(const FTransform& Transform)
@@ -51,12 +65,21 @@ void AToyBlock::OnConstruction(const FTransform& Transform)
 void AToyBlock::PostInitProperties()
 {
 	Super::PostInitProperties();
+}
 
-	if (HasAuthority())
-	{
-		CurrentHealth = MaxHealth;
-		bIsActiveBlock = true;
-	}
+void AToyBlock::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	//if (HasAuthority())
+	//{
+	//	CurrentHealth = MaxHealth;
+	//	bIsActiveBlock = true;
+	//}
+	//else
+	//{
+
+	//}
 }
 
 // Called when the game starts or when spawned
@@ -64,6 +87,22 @@ void AToyBlock::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	//if (HasAuthority())
+	//{
+	//	CurrentHealth = MaxHealth;
+	//	bIsActiveBlock = true;
+	//}
+
+	if (HasAuthority())
+	{
+		CurrentHealth = MaxHealth;
+		//bIsActiveBlock = true;
+	}
+	else
+	{
+
+	}
+
 	SetBlockActive(CurrentHealth > 0);
 }
 
@@ -83,13 +122,18 @@ void AToyBlock::DamageBlock(int32 InDamage)
 		DestroyBlock();
 	}
 
-	TOY_LOG(LogTemp, Log, TEXT("Block Current Health: %i"), CurrentHealth);
+	if (JellyEffectComponent != nullptr)
+	{
+		JellyEffectComponent->PlayJellyEffect(JellyEffectDamageData);
+	}
+
+	//TOY_LOG(LogTemp, Log, TEXT("Block Current Health: %i"), CurrentHealth);
 }
 
 void AToyBlock::DestroyBlock()
 {
-	bIsActiveBlock = false;
-	SetBlockActive(bIsActiveBlock);
+	//bIsActiveBlock = false;
+	SetBlockActive(CurrentHealth > 0);
 
 	if (RespawnTime > SMALL_NUMBER)
 	{
@@ -112,17 +156,27 @@ void AToyBlock::ResetBlockState()
 {	
 	CurrentHealth = MaxHealth;
 	
-	bIsActiveBlock = true;
-	SetBlockActive(bIsActiveBlock);
+	//bIsActiveBlock = true;
+	SetBlockActive(CurrentHealth > 0);
+
+	if (JellyEffectComponent != nullptr)
+	{
+		JellyEffectComponent->PlayJellyEffect(JellyEffectRespawnData);
+	}
 }
 
-void AToyBlock::OnRep_IsActiveBlock()
+void AToyBlock::OnRep_CurrentHealth()
 {
-	SetBlockActive(bIsActiveBlock);
+	SetBlockActive(CurrentHealth > 0);
 }
+
+//void AToyBlock::OnRep_IsActiveBlock()
+//{
+//	SetBlockActive(bIsActiveBlock);
+//}
 
 void AToyBlock::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
 	DOREPLIFETIME(AToyBlock, CurrentHealth);
-	DOREPLIFETIME(AToyBlock, bIsActiveBlock);
+	//DOREPLIFETIME(AToyBlock, bIsActiveBlock);
 }

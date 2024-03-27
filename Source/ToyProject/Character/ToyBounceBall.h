@@ -55,6 +55,9 @@ public:
 	TObjectPtr <class UStaticMeshComponent> BounceBallMeshComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = BounceBall)
+	TObjectPtr <class UToyCharacterJellyEffectComponent> BounceBallJellyEffectComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category = BounceBall)
 	float BallRadius = 50;  
 
 	UPROPERTY(EditDefaultsOnly, Category = BounceBall)

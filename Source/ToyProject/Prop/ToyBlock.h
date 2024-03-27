@@ -22,6 +22,10 @@ public:
 
 	virtual void PostInitProperties() override;
 
+	/** Allow actors to initialize themselves on the C++ side after all of their components have been initialized, only called during gameplay */
+	virtual void PostInitializeComponents() override;
+
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -35,30 +39,44 @@ public:
 	virtual void DestroyBlock() override;
 	virtual void ResetBlockState() override;
 
+	//UFUNCTION()
+	//void OnRep_IsActiveBlock ();
+
 	UFUNCTION()
-	void OnRep_IsActiveBlock ();
+	void OnRep_CurrentHealth();
 
 public:
-	UPROPERTY (EditDefaultsOnly, BlueprintReadOnly, Category = Block)
+	UPROPERTY (EditDefaultsOnly, BlueprintReadOnly, Category = "Block Info")
 	TObjectPtr <class UStaticMeshComponent> BlockStaticMeshComponent;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Block)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Block Info")
 	TObjectPtr <class UBoxComponent> BlockBoxComponent;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Block)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Block Info")
 	FVector BlockSize = FVector (100, 100, 100);
 	
-	UPROPERTY (EditDefaultsOnly, BlueprintReadWrite, Category = Block)
+	UPROPERTY (EditDefaultsOnly, BlueprintReadWrite, Category = "Block Info")
 	int32 MaxHealth = 100;
 
-	UPROPERTY(Replicated, VisibleAnywhere, Category = Block)
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth, VisibleAnywhere, Category = "Block Info")
 	int32 CurrentHealth = 100;
 
-	UPROPERTY(ReplicatedUsing = OnRep_IsActiveBlock, VisibleAnywhere, Category = Block)
-	bool bIsActiveBlock;
+	//UPROPERTY(ReplicatedUsing = OnRep_IsActiveBlock, VisibleAnywhere, Category = "Block Info")
+	//bool bIsActiveBlock;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Block)
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Block Info")
 	float RespawnTime = 10.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Block Jelly Effect Info")
+	TObjectPtr <class UToyJellyEffectComponent> JellyEffectComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Block Jelly Effect Info")
+	TObjectPtr <class UToyJellyEffectData> JellyEffectDamageData;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Block Jelly Effect Info")
+	TObjectPtr <class UToyJellyEffectData> JellyEffectRespawnData;
+
 
 	UPROPERTY ()
 	FTimerHandle RespawnTimerHandle;

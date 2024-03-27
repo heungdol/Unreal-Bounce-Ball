@@ -29,6 +29,7 @@
 #include "ToyProject.h"
 
 #include "Interface/ToyBlockInterface.h"
+#include "Component/ToyCharacterJellyEffectComponent.h"
 
 //#include "Data/ToyBounceBallActionData.h"
 
@@ -104,6 +105,13 @@ AToyBounceBall::AToyBounceBall()
 		//UE_LOG(LogTemp, Log, TEXT("Add Component Hit Delegate"));
 
 		GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AToyBounceBall::BallCollisionHit);
+	}
+
+	// 젤리 이펙트 생성
+	BounceBallJellyEffectComponent = CreateDefaultSubobject <UToyCharacterJellyEffectComponent>(TEXT("Bounce Ball Jelly Effect Component"));
+	if (BounceBallJellyEffectComponent != nullptr)
+	{
+		BounceBallJellyEffectComponent->SetMeshComponent(BounceBallMeshComponent);
 	}
 
 	bReplicates = true;
