@@ -29,6 +29,7 @@
 #include "ToyProject.h"
 
 #include "Interface/ToyBlockInterface.h"
+#include "Interface/ToyStatInterface.h"
 #include "Component/ToyCharacterJellyEffectComponent.h"
 
 //#include "Data/ToyBounceBallActionData.h"
@@ -44,7 +45,7 @@ AToyBounceBall::AToyBounceBall()
 	{
 		static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMeshRef 
 		(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
-		if (IsValid(SphereMeshRef.Object))
+		if (SphereMeshRef.Object != nullptr)
 		{
 			BounceBallMeshComponent->SetStaticMesh(SphereMeshRef.Object);
 		}
@@ -65,10 +66,6 @@ AToyBounceBall::AToyBounceBall()
 	{
 		SpringArmComponent->SetupAttachment(RootComponent);
 		SpringArmComponent->TargetArmLength = 3000.0f;		
-		
-		//SpringArmComponent->bEnableCameraLag = true;
-		//SpringArmComponent->CameraLagMaxDistance = 0.0f;
-		//SpringArmComponent->CameraLagSpeed = 1.0f;
 	}
 
 	if (CameraComponent = CreateDefaultSubobject <UToyCameraComponent>(TEXT("Camera Component")))
@@ -91,7 +88,7 @@ AToyBounceBall::AToyBounceBall()
 
 	// 캐릭터 무브먼트 설정
 	//BouneBallMovementComponent = GetCharacterMovement();
-	if (IsValid(GetCharacterMovement()))
+	if (GetCharacterMovement() != nullptr)
 	{
 		GetCharacterMovement()->AirControl = 1;
 		GetCharacterMovement()->MaxWalkSpeed = 800;
@@ -124,25 +121,14 @@ void AToyBounceBall::BeginPlay()
 
 	// Input Mapping Context 설정
 	APlayerController* PlayerController = Cast <APlayerController>(GetController());
-	if (IsValid (PlayerController))
+	if (PlayerController != nullptr)
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem
 			= PlayerController->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
 		{
 			Subsystem->AddMappingContext(InputMappingContext, 0);
 		}
-
-		//PlayerController->SetINput
 	}
-
-	//if (ASC == nullptr)
-	//{
-	//	TOY_LOG(LogTemp, Log, TEXT("ASC is nullptr"));
-	//}
-	//else
-	//{
-	//	TOY_LOG(LogTemp, Log, TEXT("ASC is valid"));
-	//}
 }
 
 // Called every frame
@@ -156,14 +142,6 @@ void AToyBounceBall::Tick(float DeltaTime)
 
 	// 병든 공튀기기
 	//MoveRandom();
-
-	//APlayerController* PlayerController = Cast <APlayerController>(GetController());
-	//if (PlayerController != nullptr)
-	//{
-	//	float TestInput = PlayerController->GetInputAnalogKeyState(EKeys::Left);
-
-	//	TOY_LOG(LogTemp, Log, TEXT("%f"), TestInput);
-	//}
 }
 
 // Called to bind functionality to input
@@ -184,13 +162,6 @@ void AToyBounceBall::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 			EnhancedInputComponent->BindAction(InputAction.Value, ETriggerEvent::Triggered, this, &AToyBounceBall::BindPressedActionByInputID, InputAction.Key);
 			EnhancedInputComponent->BindAction(InputAction.Value, ETriggerEvent::Completed, this, &AToyBounceBall::BindReleasedActionByInputID, InputAction.Key);
 		}
-
-		// 명목상 릴리즈 액션도 만들어 놓음
-		//for (const auto& InputAction : InputReleasedActions)
-		//{
-		//}
-
-		//UE_LOG(LogTemp, Log, TEXT("Init Ball"));
 	}
 }
 
@@ -209,15 +180,6 @@ void AToyBounceBall::PossessedBy(AController* NewController)
 	// 시작할 때 자동으로 콘솔 입력
 	APlayerController* PlayerController = CastChecked <APlayerController>(NewController);
 	PlayerController->ConsoleCommand(TEXT("showdebug abilitysystem"));
-
-	//if (ASC != nullptr)
-	//{
-	//	TOY_LOG(LogTemp, Log, TEXT("ASC Name: %s"), *ASC->GetName());
-	//}
-	//else
-	//{
-	//	TOY_LOG(LogTemp, Log, TEXT("ASC Name: No ASC"));
-	//}
 }
 
 void AToyBounceBall::OnRep_PlayerState()
@@ -252,36 +214,7 @@ void AToyBounceBall::MoveByAxisInput(const FInputActionValue& Value)
 	FVector2D MovementVector = Value.Get <FVector2D>();
 
 	InputAxisMoveX = (FMath::Abs(MovementVector.X) < SMALL_NUMBER) ? 0.0f : FMath::Sign(MovementVector.X);
-
-	//UE_LOG(LogTemp, Log, TEXT("Move X: %f \t Move Y: %f"), GetLastMovementInputVector().Y, MovementVector.Y);
-
 	AddMovementInput(FVector(0, 1, 0), InputAxisMoveX);
-	//UE_LOG(LogTemp, Log, TEXT("%f"), GetPendingMovementInputVector().Y);
-
-	//if (ASC != nullptr)
-	//{
-	//	if (InputAxisMoveX > SMALL_NUMBER)
-	//	{
-	//		if (InputAxisMoveX < 0)
-	//		{
-	//			ASC->AddReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_LEFT);
-	//			//ASC->RemoveReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_NONE);
-	//			//ASC->RemoveReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_RIGHT);
-	//		}
-	//		else
-	//		{
-	//			//ASC->RemoveReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_LEFT);
-	//			//ASC->RemoveReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_NONE);
-	//			ASC->AddReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_RIGHT);
-	//		}
-	//	}
-	//	else
-	//	{
-	//		//ASC->RemoveReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_LEFT);
-	//		ASC->AddReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_NONE);
-	//		//ASC->RemoveReplicatedLooseGameplayTag(TOYTAG_INPUT_MOVE_RIGHT);
-	//	}
-	//}
 }
 
 float AToyBounceBall::GetInputAxisMoveX() const
@@ -293,8 +226,6 @@ void AToyBounceBall::BindPressedActionByInputID(int32 InputID)
 {
 	if (ASC == nullptr)
 	{
-		//TOY_LOG(LogTemp, Log, TEXT("No ASC"));
-
 		return;
 	}
 
@@ -329,15 +260,13 @@ void AToyBounceBall::BindReleasedActionByInputID(int32 InputID)
 		if (Spec->IsActive())
 		{
 			ASC->AbilitySpecInputReleased(*Spec);
-
-			//TOY_LOG(LogTemp, Log, TEXT("Released"));
 		}
 	}
 }
 
 void AToyBounceBall::BallCollisionHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (IsValid(GetCharacterMovement()) == false)
+	if (GetCharacterMovement() == nullptr)
 	{
 		return;
 	}
@@ -364,10 +293,10 @@ void AToyBounceBall::BallCollisionHit(UPrimitiveComponent* HitComponent, AActor*
 	}
 
 	// 만약 블록과 부딪힌다면
-	IToyBlockInterface* Block = Cast <IToyBlockInterface>(OtherActor);
-	if (Block != nullptr)
+	IToyStatInterface* ToyStatInterface = Cast <IToyStatInterface>(OtherActor);
+	if (ToyStatInterface != nullptr)
 	{
-		Block->DamageBlock(10);
+		ToyStatInterface->AddHealth(-10);
 	}
 }
 

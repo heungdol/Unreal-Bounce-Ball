@@ -6,6 +6,8 @@
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 
+#include "Component/ToyStatComponent.h"
+
 #include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
 
@@ -18,18 +20,19 @@
 AToyBlock::AToyBlock()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 	
 	bReplicates = true;
 	bNetLoadOnClient = true;
 
 	BlockBoxComponent = CreateDefaultSubobject <UBoxComponent>(TEXT("Box Component"));
+	BlockBoxComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	RootComponent = BlockBoxComponent;
 
 	BlockStaticMeshComponent = CreateDefaultSubobject <UStaticMeshComponent>(TEXT("Mesh Component"));
 	BlockStaticMeshComponent->SetupAttachment(BlockBoxComponent);
-	BlockStaticMeshComponent->SetIsReplicated(false);
-	//BlockStaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BlockStaticMeshComponent->SetIsReplicated(true);
+	BlockStaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> BoxMeshRef (TEXT("/Engine/BasicShapes/Cube1.Cube1"));
 	if (BoxMeshRef.Object != nullptr)
@@ -37,14 +40,15 @@ AToyBlock::AToyBlock()
 		BlockStaticMeshComponent->SetStaticMesh(BoxMeshRef.Object);
 	}
 
+	StatComponent = CreateDefaultSubobject <UToyStatComponent>(TEXT("Stat Component"));
+	StatComponent->SetIsReplicated(true);
+
 	JellyEffectComponent = CreateDefaultSubobject <UToyJellyEffectComponent>(TEXT("Jelly Effect Component"));
 	if (JellyEffectComponent != nullptr)
 	{
 		JellyEffectComponent->SetMeshComponent(BlockStaticMeshComponent);
+		JellyEffectComponent->SetIsReplicated(false);
 	}
-
-	//CurrentHealth = MaxHealth;
-	//bIsActiveBlock = true;
 }
 
 void AToyBlock::OnConstruction(const FTransform& Transform)
@@ -70,77 +74,50 @@ void AToyBlock::PostInitProperties()
 void AToyBlock::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-
-	//if (HasAuthority())
-	//{
-	//	CurrentHealth = MaxHealth;
-	//	bIsActiveBlock = true;
-	//}
-	//else
-	//{
-
-	//}
 }
 
 // Called when the game starts or when spawned
 void AToyBlock::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	//if (HasAuthority())
-	//{
-	//	CurrentHealth = MaxHealth;
-	//	bIsActiveBlock = true;
-	//}
 
-	if (HasAuthority())
+	bIsRestted = false;
+
+	if (StatComponent != nullptr)
 	{
-		CurrentHealth = MaxHealth;
-		//bIsActiveBlock = true;
-	}
-	else
-	{
+		StatComponent->OnHealthDamage.AddUObject(this, &AToyBlock::DamageBlock);
+		StatComponent->OnHealthZero.AddUObject(this, &AToyBlock::BreakBlock);
+		StatComponent->OnHealthZero.AddUObject(this, &AToyBlock::Die);
+		StatComponent->OnHealthReset.AddUObject(this, &AToyBlock::ResetBlock);
 
-	}
+		StatComponent->
+			OnHealthReplicate.AddLambda([&]()
+			{
+				if (bIsRestted == true)
+				{
+					return;
+				}
 
-	SetBlockActive(CurrentHealth > 0);
+				bIsRestted = true;
+
+				if ((StatComponent->GetCurrentHealth() > 0))
+				{
+					RespawnTimerHandle.Invalidate();
+					SetBlockActive(true);
+				}
+				else
+				{
+					SetBlockActive(false);
+				}
+			});
+	}
 }
 
 // Called every frame
-void AToyBlock::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-
-void AToyBlock::DamageBlock(int32 InDamage)
-{
-	CurrentHealth -= InDamage;
-	CurrentHealth = FMath::Clamp(CurrentHealth, 0, CurrentHealth);
-
-	if (CurrentHealth == 0)
-	{
-		DestroyBlock();
-	}
-
-	if (JellyEffectComponent != nullptr)
-	{
-		JellyEffectComponent->PlayJellyEffect(JellyEffectDamageData);
-	}
-
-	//TOY_LOG(LogTemp, Log, TEXT("Block Current Health: %i"), CurrentHealth);
-}
-
-void AToyBlock::DestroyBlock()
-{
-	//bIsActiveBlock = false;
-	SetBlockActive(CurrentHealth > 0);
-
-	if (RespawnTime > SMALL_NUMBER)
-	{
-		RespawnTimerHandle.Invalidate();
-		GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, this, &AToyBlock::ResetBlockState, RespawnTime, false);
-	}
-}
+//void AToyBlock::Tick(float DeltaTime)
+//{
+//	Super::Tick(DeltaTime);
+//}
 
 void AToyBlock::SetBlockActive(bool InActive)
 {
@@ -152,12 +129,29 @@ void AToyBlock::SetBlockActive(bool InActive)
 	SetActorEnableCollision(InActive);
 }
 
-void AToyBlock::ResetBlockState()
+void AToyBlock::DamageBlock()
+{
+	if (JellyEffectComponent != nullptr)
+	{
+		JellyEffectComponent->PlayJellyEffect(JellyEffectDamageData);
+	}
+}
+
+void AToyBlock::HealBlock()
+{
+
+}
+
+void AToyBlock::BreakBlock()
+{
+	SetBlockActive(false);
+}
+
+void AToyBlock::ResetBlock()
 {	
-	CurrentHealth = MaxHealth;
-	
-	//bIsActiveBlock = true;
-	SetBlockActive(CurrentHealth > 0);
+	RespawnTimerHandle.Invalidate();
+
+	SetBlockActive(true);
 
 	if (JellyEffectComponent != nullptr)
 	{
@@ -165,18 +159,41 @@ void AToyBlock::ResetBlockState()
 	}
 }
 
-void AToyBlock::OnRep_CurrentHealth()
+UToyStatComponent* AToyBlock::GetStatComponent()
 {
-	SetBlockActive(CurrentHealth > 0);
+	return StatComponent;
 }
 
-//void AToyBlock::OnRep_IsActiveBlock()
-//{
-//	SetBlockActive(bIsActiveBlock);
-//}
-
-void AToyBlock::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+void AToyBlock::AddHealth(int32 InHealth)
 {
-	DOREPLIFETIME(AToyBlock, CurrentHealth);
-	//DOREPLIFETIME(AToyBlock, bIsActiveBlock);
+	if (GetStatComponent() == nullptr)
+	{
+		return;
+	}
+
+	GetStatComponent()->AddCurrentHealth(InHealth);
+}
+
+void AToyBlock::Die()
+{
+	//SetBlockActive(false);
+
+	if (RespawnTime > SMALL_NUMBER)
+	{
+		RespawnTimerHandle.Invalidate();
+
+		GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, 
+			FTimerDelegate::CreateLambda([this]()
+			{
+				if (GetStatComponent() == nullptr)
+				{
+					return;
+				}
+
+				GetStatComponent()->ResetCurrentHealth();
+				
+			}), RespawnTime, false);
+	}
+
+	//UE_LOG(LogTemp, Log, TEXT("Health Zero?: %i"), GetStatComponent()->GetCurrentHealth());
 }

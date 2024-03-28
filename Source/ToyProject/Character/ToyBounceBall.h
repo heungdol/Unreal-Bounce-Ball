@@ -6,11 +6,12 @@
 #include "GameFramework/Character.h"
 
 #include "AbilitySystemInterface.h"
+#include "Interface/ToyBounceBallInterface.h"
 
 #include "ToyBounceBall.generated.h"
 
 UCLASS()
-class TOYPROJECT_API AToyBounceBall : public ACharacter, public IAbilitySystemInterface
+class TOYPROJECT_API AToyBounceBall : public ACharacter, public IAbilitySystemInterface, public IToyBounceBallInterface
 {
 	GENERATED_BODY()
 
@@ -45,9 +46,6 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = GAS)
 	TMap <int32, TSubclassOf <class UGameplayAbility>> GameplayActionAbilities;
-
-	//UPROPERTY(EditAnywhere, Category = GAS)
-	//TArray <TSubclassOf <class UToyBounceBallActionData>> GameplayActionAbilities;
 
 // Ball Setting
 public:
@@ -112,16 +110,6 @@ public:
 
 	UFUNCTION ()
 	void BallCollisionHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-
-	//UFUNCTION ()
-	//void SetMovementStateFalling();
-
-	//UFUNCTION()
-	//void SetMovementStateNone();
-
-	//UFUNCTION()
-	//void SetMovementVelocityZero();
-
 
 	// Ability로 뺄 예정
 	void MoveRandom();

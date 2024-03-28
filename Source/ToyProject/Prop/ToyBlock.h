@@ -6,11 +6,12 @@
 #include "GameFramework/Actor.h"
 
 #include "Interface/ToyBlockInterface.h"
+#include "Interface/ToyStatInterface.h"
 
 #include "ToyBlock.generated.h"
 
 UCLASS()
-class TOYPROJECT_API AToyBlock : public AActor, public IToyBlockInterface
+class TOYPROJECT_API AToyBlock : public AActor, public IToyBlockInterface, public IToyStatInterface
 {
 	GENERATED_BODY()
 	
@@ -32,18 +33,23 @@ protected:
 
 public:	
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	//virtual void Tick(float DeltaTime) override;
+
+	virtual class UToyStatComponent* GetStatComponent() override;
+	virtual void AddHealth (int32 InHealth) override;
+	virtual void Die() override;
 
 	virtual void SetBlockActive(bool InActive) override;
-	virtual void DamageBlock(int32 InDamage) override;
-	virtual void DestroyBlock() override;
-	virtual void ResetBlockState() override;
+	virtual void DamageBlock() override;
+	virtual void HealBlock() override;
+	virtual void BreakBlock() override;
+	virtual void ResetBlock() override;
 
 	//UFUNCTION()
 	//void OnRep_IsActiveBlock ();
 
-	UFUNCTION()
-	void OnRep_CurrentHealth();
+	//UFUNCTION()
+	//void OnRep_CurrentHealth();
 
 public:
 	UPROPERTY (EditDefaultsOnly, BlueprintReadOnly, Category = "Block Info")
@@ -55,18 +61,22 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Block Info")
 	FVector BlockSize = FVector (100, 100, 100);
 	
-	UPROPERTY (EditDefaultsOnly, BlueprintReadWrite, Category = "Block Info")
-	int32 MaxHealth = 100;
+	//UPROPERTY (EditDefaultsOnly, BlueprintReadWrite, Category = "Block Info")
+	//int32 MaxHealth = 100;
 
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth, VisibleAnywhere, Category = "Block Info")
-	int32 CurrentHealth = 100;
+	//UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth, VisibleAnywhere, Category = "Block Info")
+	//int32 CurrentHealth = 100;
 
 	//UPROPERTY(ReplicatedUsing = OnRep_IsActiveBlock, VisibleAnywhere, Category = "Block Info")
 	//bool bIsActiveBlock;
 
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Block Stat Info")
+	TObjectPtr <class UToyStatComponent> StatComponent;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Block Info")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Block Stat Info")
 	float RespawnTime = 10.0f;
+
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Block Jelly Effect Info")
 	TObjectPtr <class UToyJellyEffectComponent> JellyEffectComponent;
@@ -80,4 +90,6 @@ public:
 
 	UPROPERTY ()
 	FTimerHandle RespawnTimerHandle;
+
+	bool bIsRestted = false;
 };

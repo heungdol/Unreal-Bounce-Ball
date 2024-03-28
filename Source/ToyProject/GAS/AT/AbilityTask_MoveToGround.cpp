@@ -5,14 +5,6 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-//UAbilityTask_MoveToGround::UAbilityTask_MoveToGround(const FObjectInitializer& ObjectInitializer)
-//	: Super(ObjectInitializer)
-//{
-//	bTickingTask = true;
-//	bSimulatedTask = true;
-//	bIsFinished = false;
-//}
-
 UAbilityTask_MoveToGround* UAbilityTask_MoveToGround::MoveToGround(UGameplayAbility* OwningAbility, FName TaskInstanceName, float InputMoveSpeed/*, float InputBouncePower*/)
 {
 	UAbilityTask_MoveToGround* MyObj = NewAbilityTask<UAbilityTask_MoveToGround>(OwningAbility, TaskInstanceName);
@@ -35,21 +27,6 @@ void UAbilityTask_MoveToGround::InitSimulatedTask(UGameplayTasksComponent& InGam
 void UAbilityTask_MoveToGround::Activate()
 {
 	Super::Activate();
-
-	//UE_LOG(LogTemp, Log, TEXT("Move to Ground Task Activate"));
-
-	//AActor* MyActor = GetAvatarActor();
-	//ACharacter* MyCharacter = nullptr;
-	//UCharacterMovementComponent* MyCharacterMovementComponent = nullptr;
-
-	//if (MyActor)
-	//{
-	//	MyCharacter = Cast <ACharacter>(MyActor);
-	//	if (MyCharacter)
-	//	{
-	//		MyCharacterMovementComponent = MyCharacter->GetCharacterMovement();
-	//	}
-	//}
 }
 
 void UAbilityTask_MoveToGround::TickTask(float DeltaTime)
@@ -92,18 +69,9 @@ void UAbilityTask_MoveToGround::TickTask(float DeltaTime)
 	}
 	else
 	{
-		//MyCharacterMovementComponent->Velocity.Z = MoveSpeed * -1.0f;
-		MyCharacterMovementComponent->Velocity = FVector(0, 0, MoveSpeed * -1.0f/* * DeltaTime*/);
+		MyCharacterMovementComponent->Velocity = FVector(0, 0, MoveSpeed * -1.0f);
 		MyCharacterMovementComponent->UpdateComponentVelocity();
-
-		//MyActor->AddActorWorldOffset(FVector(0, 0, MoveSpeed * -1.0f * DeltaTime));
 	}
-	
-	//else
-	//{
-	//	bIsFinished = true;
-	//	EndTask();
-	//}
 }
 
 

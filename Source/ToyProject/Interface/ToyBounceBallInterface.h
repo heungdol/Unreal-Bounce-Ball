@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "ToyBlockInterface.generated.h"
+#include "ToyBounceBallInterface.generated.h"
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UToyBlockInterface : public UInterface
+class UToyBounceBallInterface : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -16,17 +16,10 @@ class UToyBlockInterface : public UInterface
 /**
  * 
  */
-class TOYPROJECT_API IToyBlockInterface
+class TOYPROJECT_API IToyBounceBallInterface
 {
 	GENERATED_BODY()
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-
-	virtual void SetBlockActive(bool InActive) = 0;
-
-	virtual void DamageBlock() = 0;
-	virtual void BreakBlock() = 0;
-	virtual void HealBlock() = 0;
-	virtual void ResetBlock() = 0;
 };
