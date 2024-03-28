@@ -32,6 +32,9 @@
 #include "Interface/ToyStatInterface.h"
 #include "Component/ToyCharacterJellyEffectComponent.h"
 
+#include "Attack/DamageType_Boom.h"
+#include "Engine/DamageEvents.h"
+
 //#include "Data/ToyBounceBallActionData.h"
 
 // Sets default values
@@ -188,6 +191,38 @@ void AToyBounceBall::OnRep_PlayerState()
 
 	// 일반 클라이언트에서 수행
 	SetupGAS();
+}
+
+float AToyBounceBall::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float ResultDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+
+	//TOY_LOG(LogTemp, Log, TEXT("Any Attack Damage..."));
+
+	if (DamageEvent.DamageTypeClass == UDamageType_Boom::StaticClass())
+	{
+		DamageByBoomAttack();
+	}
+
+	return ResultDamage;
+}
+
+void AToyBounceBall::BoomAttack()
+{
+	if (BounceBallJellyEffectComponent != nullptr)
+	{
+		BounceBallJellyEffectComponent->PlayJellyEffect(JellyEffectBoomAttackData);
+	}
+}
+
+void AToyBounceBall::DamageByBoomAttack()
+{
+	if (BounceBallJellyEffectComponent!= nullptr)
+	{
+		BounceBallJellyEffectComponent->PlayJellyEffect(JellyEffectDamageByBoomAttackData);
+	}
+
+	//TOY_LOG(LogTemp, Log, TEXT("Boom Damage..."));
 }
 
 void AToyBounceBall::FixXVelocityZero()

@@ -34,6 +34,13 @@ public:
 
 	virtual void OnRep_PlayerState() override;
 
+	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	
+	UFUNCTION (BlueprintCallable)
+	virtual void BoomAttack() override;
+	
+	virtual void DamageByBoomAttack() override;
+
 // Ability System
 public:
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
@@ -52,8 +59,15 @@ public:
 	UPROPERTY (EditDefaultsOnly, Category=BounceBall)
 	TObjectPtr <class UStaticMeshComponent> BounceBallMeshComponent;
 
-	UPROPERTY(EditDefaultsOnly, Category = BounceBall)
+	UPROPERTY(EditDefaultsOnly, Category = "Bounce Ball Jelly Effect Info")
 	TObjectPtr <class UToyCharacterJellyEffectComponent> BounceBallJellyEffectComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bounce Ball Jelly Effect Info")
+	TObjectPtr <class UToyJellyEffectData> JellyEffectBoomAttackData;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bounce Ball Jelly Effect Info")
+	TObjectPtr <class UToyJellyEffectData> JellyEffectDamageByBoomAttackData;
+
 
 	UPROPERTY(EditDefaultsOnly, Category = BounceBall)
 	float BallRadius = 50;  

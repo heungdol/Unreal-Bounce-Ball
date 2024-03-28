@@ -59,8 +59,6 @@ void UGameplayAbility_CharacterBoom::ActivateAbility(const FGameplayAbilitySpecH
 	//	return;
 	//}
 
-	OnGameplayAbilityBegin.Broadcast();
-
 	TArray <FOverlapResult> OverlapResults;
 	FCollisionQueryParams CollisionQueryParam(SCENE_QUERY_STAT(Detect), false, SourceCharacter);
 
@@ -85,14 +83,25 @@ void UGameplayAbility_CharacterBoom::ActivateAbility(const FGameplayAbilitySpecH
 				continue;
 			}
 
+			if (TargetCharacter == SourceCharacter)
+			{
+				continue;
+			}
+
 			FVector BoomDifference = TargetCharacter->GetActorLocation() - SourceCharacter->GetActorLocation();
+			if (BoomDifference.Length() > BoomRange)
+			{
+				continue;
+			}
+
 			FVector BoomDirection = TargetCharacter->GetActorLocation() - SourceCharacter->GetActorLocation();
 			BoomDirection.Normalize();
 
 			float BoomRatio = BoomDifference.Length() / FMath::Clamp (BoomRange, 0.1f, BoomRange);
-			BoomRatio = 1 - BoomRatio;
+			BoomRatio = FMath::Clamp (1 - BoomRatio, 0.0f, 1.0f);
 
-			TargetCharacter->LaunchCharacter(BoomDirection * BoomPower * BoomRatio, true, true);
+			// Y축은 오버라이드, Z축은 새로 갱신
+			TargetCharacter->LaunchCharacter(BoomDirection * BoomPower * BoomRatio, false, true);
 
 			FDamageEvent DamageEvent (BoomDamageType);
 			TargetCharacter->TakeDamage(BoomDamage, DamageEvent, SourceCharacter->GetController(), SourceCharacter);

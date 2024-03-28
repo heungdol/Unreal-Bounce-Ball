@@ -7,7 +7,7 @@
 #include "GameplayAbility_CharacterBoom.generated.h"
 
 /** Notification delegate definition for when the gameplay ability is cancelled */
-DECLARE_MULTICAST_DELEGATE(FOnGameplayAbilityBegin);
+//DECLARE_MULTICAST_DELEGATE(FOnGameplayAbilityBegin);
 
 //DECLARE_MULTICAST_DELEGATE (F)
 
@@ -52,6 +52,6 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = GAS)
 	float BoomPower = 2000.0f;
 
-	FOnGameplayAbilityBegin OnGameplayAbilityBegin;
+	//FOnGameplayAbilityBegin OnGameplayAbilityBegin;
 
 };
