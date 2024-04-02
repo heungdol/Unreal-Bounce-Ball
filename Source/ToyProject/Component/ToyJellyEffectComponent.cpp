@@ -67,6 +67,7 @@ void UToyJellyEffectComponent::TickJellyEffect()
 			GetMeshComponent()->SetRelativeRotation(StartMeshRotation);
 			GetMeshComponent()->SetRelativeScale3D(StartMeshScale);
 			//PrimaryComponentTick.bCanEverTick = false;
+			SetComponentTickEnabled(false);
 
 			//UE_LOG(LogTemp, Log, TEXT("Jelly Effect End... -> No Data"));
 			return;
@@ -81,6 +82,7 @@ void UToyJellyEffectComponent::TickJellyEffect()
 			GetMeshComponent()->SetRelativeRotation(StartMeshRotation);
 			GetMeshComponent()->SetRelativeScale3D(StartMeshScale);
 			//PrimaryComponentTick.bCanEverTick = false;
+			SetComponentTickEnabled(false);
 
 			//UE_LOG(LogTemp, Log, TEXT("Jelly Effect End... -> Time"));
 			return;
@@ -103,6 +105,7 @@ void UToyJellyEffectComponent::TickJellyEffect()
 	{
 		//UE_LOG(LogTemp, Log, TEXT("Jelly Effect End..."));
 		//PrimaryComponentTick.bCanEverTick = false;
+		SetComponentTickEnabled(false);
 	}
 }
 
@@ -140,6 +143,7 @@ void UToyJellyEffectComponent::PlayJellyEffect(UToyJellyEffectData* InJellyEffec
 
 	bIsPlayingJellyEffect = true;
 	//PrimaryComponentTick.bCanEverTick = true;
+	SetComponentTickEnabled(true);
 
 	// 젤리 이펙트 수행 (첫 틱)
 	CurrentJellyEffectLocation = CurrentJellyEffectData->GetLocationVectorByRatio(0.0f);
